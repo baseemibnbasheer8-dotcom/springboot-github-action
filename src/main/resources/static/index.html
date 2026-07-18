@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calculator App</title>
+</head>
+<body>
+
+<h2>Simple Calculator</h2>
+
+<input type="number" id="a" placeholder="Enter first number">
+<input type="number" id="b" placeholder="Enter second number">
+
+<br><br>
+
+<button onclick="calculate()">Add</button>
+
+<h3 id="result"></h3>
+
+<script>
+function calculate() {
+    let a = document.getElementById("a").value;
+    let b = document.getElementById("b").value;
+
+    fetch(`/add?a=${a}&b=${b}`)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("result").innerText = "Result: " + data;
+        });
+}
+</script>
+
+</body>
+</html>

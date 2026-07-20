@@ -17,4 +17,16 @@ jobs:
           java-version: '21'
 
       - name: Build Application
-        run: mvn clean package
+        run: mvn clean verify
+
+      - name: SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PROJECT_KEY: ${{ secrets.PROJECT_KEY}}
+          ORGANIZATION_KEY: ${{ secrets.ORGANIZATION_KEY}}
+        run: |
+          mvn sonar:sonar
+            -Dsonar.projectKey=$PROJECT_KEY \
+            -Dsonar.organization=$ORGANIZATION_KEY \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.token=$SONAR_TOKEN

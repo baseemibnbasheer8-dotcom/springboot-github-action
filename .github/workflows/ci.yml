@@ -36,4 +36,38 @@ jobs:
           -Dsonar.organization=$ORGANIZATION_KEY \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.token=$SONAR_TOKEN
+  
+      - name: Login to Docker Hub 
+        if: github.event_name == 'push' 
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Build Docker Image
+        if: github.event_name == 'push'
+        run: |
+          docker build -t  ${{ secrets.DOCKER_USERNAME }}/github-action:${{ github.run_number }} .
+
+      - name: Push Docker Image
+        if: github.event_name == 'push'
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/github-action:${{ github.run_number }}
+
+      - name: Update Helm image Tag 
+        if: github.event_name == 'push'
+        run: |
+          sed -i 's|tag:.*|tag: "${{ github.run_number }}"|' github-action/values.yaml
+
+      - name: Pakcage Helm Chart
+        if: github.event_name == 'push'
+        run: |
+          helm package github-action \
+            --version ${{ github.run_number }} \
+            --app-version ${{ github.run_number }}
+
+      - name: Publish Helm Chart
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart-${{ github.run_number }}
+          path: "*.tgz"

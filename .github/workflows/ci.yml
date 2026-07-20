@@ -65,9 +65,15 @@ jobs:
             --version ${{ github.run_number }} \
             --app-version ${{ github.run_number }}
 
-      - name: Publish Helm Chart
+      - name: Login to OCI Registry
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@v4
-        with:
-          name: helm-chart-${{ github.run_number }}
-          path: "*.tgz"
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | \
+          helm registry login docker.io \
+            --username "${{ secrets.DOCKER_USERNAME }}" \
+            --password-stdin
+      - name: Push Helm Chart
+        if: github.event_name == 'push'
+        run: |
+          helm push github-action-${{ github.run_number }}.tgz \
+            oci://docker.io/${{ secrets.DOCKER_USERNAME }}/github-action-chart

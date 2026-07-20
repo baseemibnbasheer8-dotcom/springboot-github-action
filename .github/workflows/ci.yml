@@ -24,9 +24,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           PROJECT_KEY: ${{ secrets.PROJECT_KEY}}
           ORGANIZATION_KEY: ${{ secrets.ORGANIZATION_KEY}}
-            run: |
-              mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
-              -Dsonar.projectKey=$PROJECT_KEY \
-              -Dsonar.organization=$ORGANIZATION_KEY \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token=$SONAR_TOKEN
+        run: |
+          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+          -Dsonar.projectKey=$PROJECT_KEY \
+          -Dsonar.organization=$ORGANIZATION_KEY \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.token=$SONAR_TOKEN

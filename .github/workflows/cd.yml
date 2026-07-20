@@ -29,7 +29,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           helm upgrade --install github-action \
-            github-action-${{ github.event.workflow_run.run_number }}.tgz
+            github-action-chart-${{ github.event.workflow_run.run_number }}.tgz
 
       - name: Verify Deployment
         run: |

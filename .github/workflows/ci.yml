@@ -30,3 +30,4 @@ jobs:
           -Dsonar.organization=$ORGANIZATION_KEY \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.token=$SONAR_TOKEN
+          

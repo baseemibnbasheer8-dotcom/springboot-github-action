@@ -17,6 +17,7 @@ jobs:
           java-version: '21'
 
       - name: Build Application
+<<<<<<< HEAD
         run: mvn clean verify
 
       - name: Sonarcloud Analyse
@@ -27,3 +28,6 @@ jobs:
         with:
             SONAR_TOKEN=$SONAR_TOKEN
 
+=======
+        run: mvn clean package
+>>>>>>> parent of f27a4d8 (add sonar cloud)

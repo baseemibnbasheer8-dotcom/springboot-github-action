@@ -75,5 +75,5 @@ jobs:
       - name: Push Helm Chart
         if: github.event_name == 'push'
         run: |
-          helm push github-action-${{ github.run_number }}.tgz \
+          helm push github-action-chart-${{ github.run_number }}.tgz \
             oci://docker.io/${{ secrets.DOCKER_USERNAME }}/github-action-chart

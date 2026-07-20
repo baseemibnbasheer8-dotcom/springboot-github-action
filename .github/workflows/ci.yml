@@ -22,8 +22,8 @@ jobs:
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          PROJECT_KEY: ${{ secrets.PROJECT_KEY}}
-          ORGANIZATION_KEY: ${{ secrets.ORGANIZATION_KEY}}
+          PROJECT_KEY: ${{ vars.PROJECT_KEY}}
+          ORGANIZATION_KEY: ${{ vars.ORGANIZATION_KEY}}
         run: |
           mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
           -Dsonar.projectKey=$PROJECT_KEY \

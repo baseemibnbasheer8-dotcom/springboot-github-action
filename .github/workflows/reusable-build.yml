@@ -39,3 +39,9 @@ jobs:
             -Dsonar.organization=${{ inputs.organization_key }} \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.token=$SONAR_TOKEN
+      
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar

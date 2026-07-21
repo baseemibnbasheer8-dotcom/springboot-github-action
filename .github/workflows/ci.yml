@@ -1,80 +1,43 @@
 name: CI
+
 on:
   push:
     branches:
       - main
-  
+
   pull_request:
     branches:
       - main
 
 jobs:
+
   build:
-    runs-on: self-hosted
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      project_key: ${{ vars.PROJECT_KEY }}
+      organization_key: ${{ vars.ORGANIZATION_KEY }}
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  docker:
+    if: github.event_name == 'push'
+    needs: build
+    uses: ./.github/workflows/reusable-docker.yml
+    with:
+      image_name: github-action
+      image_tag: ${{ github.run_number }}
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Build Application
-        run: mvn clean verify
-
-      - name: SonarCloud Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          PROJECT_KEY: ${{ vars.PROJECT_KEY}}
-          ORGANIZATION_KEY: ${{ vars.ORGANIZATION_KEY}}
-        run: |
-          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
-          -Dsonar.projectKey=$PROJECT_KEY \
-          -Dsonar.organization=$ORGANIZATION_KEY \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.token=$SONAR_TOKEN
-  
-      - name: Login to Docker Hub 
-        if: github.event_name == 'push' 
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build Docker Image
-        if: github.event_name == 'push'
-        run: |
-          docker build -t  ${{ secrets.DOCKER_USERNAME }}/github-action:${{ github.run_number }} .
-
-      - name: Push Docker Image
-        if: github.event_name == 'push'
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/github-action:${{ github.run_number }}
-
-      - name: Update Helm image Tag 
-        if: github.event_name == 'push'
-        run: |
-          sed -i 's|tag:.*|tag: "${{ github.run_number }}"|' github-action/values.yaml
-
-      - name: Pakcage Helm Chart
-        if: github.event_name == 'push'
-        run: |
-          helm package github-action \
-            --version ${{ github.run_number }} \
-            --app-version ${{ github.run_number }}
-
-      - name: Login to OCI Registry
-        if: github.event_name == 'push'
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | \
-            helm registry login registry-1.docker.io \
-              --username "${{ secrets.DOCKER_USERNAME }}" \
-              --password-stdin
-
-      - name: Push Helm Chart
-        if: github.event_name == 'push'
-        run: |
-          helm push github-action-chart-${{ github.run_number }}.tgz \
-            oci://registry-1.docker.io/${{ secrets.DOCKER_USERNAME }}
+  helm:
+    if: github.event_name == 'push'
+    needs: docker
+    uses: ./.github/workflows/reusable-helm.yml
+    with:
+      chart_path: github-action
+      chart_name: github-action-chart
+      image_tag: ${{ github.run_number }}
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

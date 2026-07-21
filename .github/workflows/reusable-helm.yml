@@ -1,0 +1,50 @@
+name: Reusable Helm
+
+on:
+  workflow_call:
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
+    inputs:
+      chart_path:
+        required: true
+        type: string
+      chart_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+
+jobs:
+  helm:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update Image Tag
+        run: |
+          sed -i 's|tag:.*|tag: "${{ inputs.image_tag }}"|' \
+          ${{ inputs.chart_path }}/values.yaml
+
+      - name: Package Helm Chart
+        run: |
+          helm package ${{ inputs.chart_path }} \
+            --version ${{ inputs.image_tag }} \
+            --app-version ${{ inputs.image_tag }}
+
+      - name: Login to OCI Registry
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | \
+          helm registry login registry-1.docker.io \
+            --username "${{ secrets.DOCKER_USERNAME }}" \
+            --password-stdin
+
+      - name: Push Helm Chart
+        run: |
+          helm push \
+          ${{ inputs.chart_name }}-${{ inputs.image_tag }}.tgz \
+          oci://registry-1.docker.io/${{ secrets.DOCKER_USERNAME }}

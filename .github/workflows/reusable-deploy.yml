@@ -26,6 +26,9 @@ jobs:
   deploy:
     runs-on: self-hosted
 
+    environemt:
+      name: production
+
     steps:
       - name: Login to OCI Registry
         run: |

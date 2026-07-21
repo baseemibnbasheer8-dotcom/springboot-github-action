@@ -1,0 +1,57 @@
+name: Reusable Deploy
+
+on:
+  workflow_call:
+    inputs:
+      release_name:
+        required: true
+        type: string
+
+      chart_name:
+        required: true
+        type: string
+
+      chart_version:
+        required: true
+        type: string
+
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+
+      DOCKER_PASSWORD:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    environment:
+      name: production
+
+    steps:
+      - name: Login to OCI Registry
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | \
+          helm registry login registry-1.docker.io \
+            --username "${{ secrets.DOCKER_USERNAME }}" \
+            --password-stdin
+
+      - name: Pull Helm Chart
+        run: |
+          helm pull \
+            oci://registry-1.docker.io/${{ secrets.DOCKER_USERNAME }}/${{ inputs.chart_name }} \
+            --version ${{ inputs.chart_version }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          helm upgrade --install \
+            ${{ inputs.release_name }} \
+            ${{ inputs.chart_name }}-${{ inputs.chart_version }}.tgz
+
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/${{ inputs.release_name }}
+          kubectl get pods
+          kubectl get svc
+          helm list
